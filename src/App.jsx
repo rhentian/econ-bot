@@ -1,58 +1,156 @@
 import { useState, useRef, useEffect } from "react";
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, ReferenceLine, Area, AreaChart
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, RadarChart, Radar, PolarGrid,
+  PolarAngleAxis, LineChart, Line, Legend, PieChart, Pie, Cell
 } from "recharts";
 
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 const GROQ_MODEL = "llama-3.3-70b-versatile";
 
-const SYSTEM_PROMPT = `Eres un tutor experto en Economía Internacional, especializado en el Modelo Ricardiano de Ventaja Comparativa y el Modelo de Factores Específicos. 
+const SYSTEM_PROMPT = `You are EconBot, an expert AI assistant in International Economics and Globalization, trained on two authoritative textbooks:
 
-Responde SIEMPRE en español. Sé claro, didáctico y usa ejemplos numéricos cuando sea útil.
+1. "International Trade" by Robert C. Feenstra & Alan M. Taylor (3rd Edition)
+   - Part 1: Introduction to International Trade (Ch.1: Trade in the Global Economy)
+   - Part 2: Patterns of International Trade:
+     * Ch.2: Trade and Technology - The Ricardian Model
+     * Ch.3: Gains and Losses from Trade - Specific-Factors Model
+     * Ch.4: Trade and Resources - Heckscher-Ohlin Model
+     * Ch.5: Movement of Labor and Capital between Countries
+   - Part 3: New Explanations for International Trade:
+     * Ch.6: Increasing Returns to Scale and Monopolistic Competition
+     * Ch.7: Offshoring of Goods and Services
+   - Part 4: International Trade Policies:
+     * Ch.8: Import Tariffs and Quotas Under Perfect Competition
+     * Ch.9: Import Tariffs and Quotas Under Imperfect Competition
+     * Ch.10: Export Subsidies in Agriculture and High-Technology Industries
+     * Ch.11: International Agreements: Trade, Labor, and the Environment
 
-Cuando el usuario pida un gráfico de la FPP (Frontera de Posibilidades de Producción), responde con un JSON especial en este formato exacto (nada más, solo el JSON):
-{"type":"ppf","country":"Nombre del País","good1":"Bien 1","good2":"Bien 2","maxGood1":100,"maxGood2":80,"label":"Descripción breve"}
+2. "An Introduction to International Economics: New Perspectives on the World Economy" by Kenneth A. Reinert (2nd Edition, Cambridge University Press, 2012)
+   - Part I: International Trade (Absolute Advantage, Comparative Advantage, Intra-industry Trade, Trade Policy)
+   - Part II: International Production (Foreign Market Entry, FDI, Global Value Chains)
+   - Part III: International Finance (Accounting Frameworks, Exchange Rates, IMF)
+   - Part IV: International Development (Development Concepts, Trade and Development)
 
-Para cualquier otra pregunta, responde en texto normal con explicaciones claras sobre:
-- Ventaja comparativa y absoluta
-- Costo de oportunidad
-- Ganancias del comercio
-- Modelo Ricardiano (tecnología, trabajo, salarios)
-- Modelo de Factores Específicos (capital, tierra, trabajo móvil)
-- Términos de intercambio
-- Bienestar y distribución del ingreso
+ALWAYS respond in English. Be precise, academic, and cite concepts from these textbooks when relevant.
 
-Mantén respuestas concisas pero completas (máximo 300 palabras salvo que se pida más detalle).`;
+DASHBOARD CAPABILITY — VERY IMPORTANT:
+When a user asks for a dashboard, chart, graph, data visualization, or market analysis of any commodity, country, or trade topic, you MUST respond with a JSON block in this EXACT format (nothing else before or after the JSON):
 
-function PPFChart({ data }) {
-  const points = [];
-  const steps = 50;
-  for (let i = 0; i <= steps; i++) {
-    const x = (data.maxGood1 / steps) * i;
-    const y = data.maxGood2 * Math.sqrt(1 - Math.pow(x / data.maxGood1, 2));
-    points.push({ [data.good1]: parseFloat(x.toFixed(2)), [data.good2]: parseFloat(y.toFixed(2)) });
-  }
+{"type":"dashboard","title":"Dashboard Title","subtitle":"Brief description","cards":[{"label":"Metric Name","value":"XX","unit":"unit","color":"blue|cyan|purple|pink|green"},...],"barChart":{"title":"Chart Title","data":[{"name":"Label","value":number},...],"color":"#00d4ff"},"lineChart":{"title":"Trend Title","data":[{"year":"YYYY","value":number},...],"color":"#06ffa5"},"radarChart":{"title":"Risk/Factor Analysis","labels":["Factor1","Factor2","Factor3","Factor4","Factor5"],"values":[number,number,number,number,number]},"insights":["Insight 1 from textbook theory","Insight 2","Insight 3"],"source":"Based on Feenstra & Taylor / Reinert - International Economics"}
+
+Dashboard triggers: "dashboard", "show me data", "chart", "graph", "market analysis", "price of", "export data", "trade data", "visualize", "analytics"
+
+For example:
+- "dashboard of banana prices" → generate banana export dashboard
+- "show me cacao market data" → generate cacao dashboard
+- "chart of Ecuador exports" → generate Ecuador export dashboard
+- "trade analytics for shrimp" → generate shrimp trade dashboard
+
+Use realistic, academically-grounded data in dashboards. Reference Feenstra & Taylor or Reinert frameworks when providing insights.
+
+For regular questions (not dashboards), respond in clear prose using concepts from the textbooks. Cover:
+- Ricardian Model, Specific-Factors Model, Heckscher-Ohlin Model
+- Comparative advantage, absolute advantage, opportunity cost
+- Tariffs, quotas, trade policy instruments
+- Gains from trade, welfare effects
+- FDI, multinational corporations, offshoring
+- International finance, exchange rates, balance of payments
+- Trade agreements (WTO, FTAs, preferential trade)
+- Globalization and development
+
+Keep responses concise but academically rigorous (max 350 words unless more detail is requested).`;
+
+// Dashboard renderer component
+function DashboardView({ data }) {
+  const COLORS = {
+    blue: "#00d4ff", cyan: "#06ffa5", purple: "#a855f7",
+    pink: "#f472b6", green: "#22c55e"
+  };
+
+  const radarData = data.radarChart?.labels?.map((label, i) => ({
+    subject: label,
+    value: data.radarChart.values[i]
+  })) || [];
 
   return (
-    <div className="ppf-container">
-      <h3 className="ppf-title">📊 FPP — {data.country}</h3>
-      <p className="ppf-label">{data.label}</p>
-      <ResponsiveContainer width="100%" height={300}>
-        <AreaChart data={points} margin={{ top: 10, right: 20, left: 0, bottom: 20 }}>
-          <defs>
-            <linearGradient id="ppfGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
-              <stop offset="95%" stopColor="#6366f1" stopOpacity={0.02} />
-            </linearGradient>
-          </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.07)" />
-          <XAxis dataKey={data.good1} label={{ value: data.good1, position: "insideBottom", offset: -10, fill: "#a5b4fc" }} tick={{ fill: "#94a3b8", fontSize: 11 }} />
-          <YAxis label={{ value: data.good2, angle: -90, position: "insideLeft", fill: "#a5b4fc" }} tick={{ fill: "#94a3b8", fontSize: 11 }} />
-          <Tooltip contentStyle={{ background: "#1e1b4b", border: "1px solid #4f46e5", borderRadius: 8, color: "#e2e8f0" }} />
-          <Area type="monotone" dataKey={data.good2} stroke="#6366f1" strokeWidth={2.5} fill="url(#ppfGrad)" dot={false} />
-        </AreaChart>
-      </ResponsiveContainer>
+    <div className="dashboard">
+      <div className="dash-header">
+        <div className="dash-title">{data.title}</div>
+        <div className="dash-subtitle">{data.subtitle}</div>
+      </div>
+
+      {/* KPI Cards */}
+      <div className="kpi-grid">
+        {data.cards?.map((card, i) => (
+          <div className="kpi-card" key={i} style={{ "--accent": COLORS[card.color] || COLORS.blue }}>
+            <div className="kpi-val">{card.value}<span className="kpi-unit">{card.unit}</span></div>
+            <div className="kpi-label">{card.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Charts Row */}
+      <div className="charts-row">
+        {data.barChart && (
+          <div className="chart-box">
+            <div className="chart-title">{data.barChart.title}</div>
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={data.barChart.data} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                <XAxis dataKey="name" tick={{ fill: "#64748b", fontSize: 11 }} />
+                <YAxis tick={{ fill: "#64748b", fontSize: 11 }} />
+                <Tooltip contentStyle={{ background: "#0f172a", border: "1px solid rgba(0,212,255,0.2)", borderRadius: 8, color: "#e2e8f0" }} />
+                <Bar dataKey="value" fill={data.barChart.color || "#00d4ff"} radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+        {data.lineChart && (
+          <div className="chart-box">
+            <div className="chart-title">{data.lineChart.title}</div>
+            <ResponsiveContainer width="100%" height={200}>
+              <LineChart data={data.lineChart.data} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                <XAxis dataKey="year" tick={{ fill: "#64748b", fontSize: 11 }} />
+                <YAxis tick={{ fill: "#64748b", fontSize: 11 }} />
+                <Tooltip contentStyle={{ background: "#0f172a", border: "1px solid rgba(0,212,255,0.2)", borderRadius: 8, color: "#e2e8f0" }} />
+                <Line type="monotone" dataKey="value" stroke={data.lineChart.color || "#06ffa5"} strokeWidth={2} dot={{ fill: data.lineChart.color || "#06ffa5" }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+      </div>
+
+      {/* Radar Chart */}
+      {radarData.length > 0 && (
+        <div className="chart-box" style={{ marginBottom: 16 }}>
+          <div className="chart-title">{data.radarChart.title}</div>
+          <ResponsiveContainer width="100%" height={220}>
+            <RadarChart data={radarData}>
+              <PolarGrid stroke="rgba(255,255,255,0.08)" />
+              <PolarAngleAxis dataKey="subject" tick={{ fill: "#94a3b8", fontSize: 11 }} />
+              <Radar dataKey="value" stroke="#a855f7" fill="#a855f7" fillOpacity={0.2} strokeWidth={2} />
+              <Tooltip contentStyle={{ background: "#0f172a", border: "1px solid rgba(168,85,247,0.3)", borderRadius: 8, color: "#e2e8f0" }} />
+            </RadarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* Insights */}
+      {data.insights?.length > 0 && (
+        <div className="insights-box">
+          <div className="insights-title">📚 Academic Insights</div>
+          {data.insights.map((ins, i) => (
+            <div className="insight-item" key={i}>
+              <span className="insight-dot">▸</span>
+              <span>{ins}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="dash-source">{data.source}</div>
     </div>
   );
 }
@@ -66,12 +164,12 @@ function Message({ msg }) {
     );
   }
 
-  // Check if it's a PPF chart response
-  let ppfData = null;
+  // Check if dashboard
+  let dashData = null;
   try {
     const trimmed = msg.content.trim();
-    if (trimmed.startsWith("{") && trimmed.includes('"type":"ppf"')) {
-      ppfData = JSON.parse(trimmed);
+    if (trimmed.startsWith("{") && trimmed.includes('"type":"dashboard"')) {
+      dashData = JSON.parse(trimmed);
     }
   } catch (_) {}
 
@@ -79,10 +177,10 @@ function Message({ msg }) {
     <div className="msg bot-msg">
       <div className="bot-avatar">E</div>
       <div className="msg-bubble bot-bubble">
-        {ppfData ? (
-          <PPFChart data={ppfData} />
+        {dashData ? (
+          <DashboardView data={dashData} />
         ) : (
-          <p style={{ whiteSpace: "pre-wrap", lineHeight: 1.7 }}>{msg.content}</p>
+          <p style={{ whiteSpace: "pre-wrap", lineHeight: 1.75 }}>{msg.content}</p>
         )}
       </div>
     </div>
@@ -90,17 +188,27 @@ function Message({ msg }) {
 }
 
 const SUGGESTIONS = [
-  "¿Qué es la ventaja comparativa?",
-  "Muéstrame la FPP de Inglaterra",
-  "Explica el modelo de Factores Específicos",
-  "¿Cómo afecta el comercio al bienestar?",
+  "Dashboard: banana export prices",
+  "Explain the Ricardian Model",
+  "Dashboard: Ecuador trade analytics",
+  "What is comparative advantage?",
+  "Dashboard: cacao market data",
+  "How do tariffs affect welfare?",
 ];
 
 export default function App() {
   const [messages, setMessages] = useState([
     {
       role: "assistant",
-      content: "¡Hola! Soy tu tutor de Economía Internacional 📚\n\nPuedo explicarte el Modelo Ricardiano, el Modelo de Factores Específicos, ventaja comparativa, costos de oportunidad y más. También puedo generar gráficas de la FPP.\n\n¿Qué quieres aprender hoy?",
+      content: `Welcome to EconBot 📊
+
+I'm your AI assistant for International Economics and Globalization, trained on:
+• Feenstra & Taylor — "International Trade"
+• Reinert — "An Introduction to International Economics"
+
+I can explain trade models, analyze policies, and generate live dashboards for any commodity or market.
+
+Try asking for a dashboard: "Show me a dashboard for banana exports" or ask any theory question.`,
     },
   ]);
   const [input, setInput] = useState("");
@@ -132,18 +240,21 @@ export default function App() {
           model: GROQ_MODEL,
           messages: [
             { role: "system", content: SYSTEM_PROMPT },
-            ...newMessages.map((m) => ({ role: m.role === "assistant" ? "assistant" : "user", content: m.content })),
+            ...newMessages.map((m) => ({
+              role: m.role === "assistant" ? "assistant" : "user",
+              content: m.content,
+            })),
           ],
           temperature: 0.7,
-          max_tokens: 600,
+          max_tokens: 900,
         }),
       });
 
       const data = await response.json();
-      const reply = data.choices?.[0]?.message?.content || "No obtuve respuesta. Intenta de nuevo.";
+      const reply = data.choices?.[0]?.message?.content || "No response. Please try again.";
       setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
     } catch (err) {
-      setMessages((prev) => [...prev, { role: "assistant", content: "❌ Error de conexión. Verifica tu API key de Groq." }]);
+      setMessages((prev) => [...prev, { role: "assistant", content: "❌ Connection error. Check your Groq API key." }]);
     } finally {
       setLoading(false);
     }
@@ -157,10 +268,10 @@ export default function App() {
             <span className="logo-icon">⚡</span>
             <div>
               <div className="logo-title">EconBot</div>
-              <div className="logo-sub">Tutor de Economía Internacional</div>
+              <div className="logo-sub">International Trade Intelligence · Feenstra & Taylor · Reinert</div>
             </div>
           </div>
-          <div className="status-dot" title="Groq conectado" />
+          <div className="status-dot" title="Groq connected" />
         </div>
       </header>
 
@@ -194,14 +305,14 @@ export default function App() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
-            placeholder="Escribe tu pregunta de economía..."
+            placeholder="Ask a question or request a dashboard..."
             disabled={loading}
           />
           <button className="send-btn" onClick={() => sendMessage()} disabled={loading || !input.trim()}>
             {loading ? "..." : "→"}
           </button>
         </div>
-        <p className="footer-note">Powered by Groq · LLaMA 3 70B · Respuestas rápidas y gratuitas</p>
+        <p className="footer-note">Powered by Groq · LLaMA 3.3 70B · Feenstra & Taylor · Reinert</p>
       </footer>
     </div>
   );
