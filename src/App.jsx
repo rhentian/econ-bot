@@ -2,66 +2,44 @@ import { useState, useRef, useEffect } from "react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, RadarChart, Radar, PolarGrid,
-  PolarAngleAxis, LineChart, Line, Legend, PieChart, Pie, Cell
+  PolarAngleAxis, LineChart, Line
 } from "recharts";
+import { TRADE_SCENARIOS, findScenario, getAllScenariosSummary } from "./tradeData.js";
 
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 const GROQ_MODEL = "llama-3.3-70b-versatile";
 
-const SYSTEM_PROMPT = `You are EconBot, an expert AI assistant in International Economics and Globalization, trained on two authoritative textbooks:
+// Base system prompt — always sent (minimal tokens)
+const BASE_SYSTEM = `You are EconBot, an AI Trade Intelligence Assistant trained on:
+1. "International Trade" by Feenstra & Taylor — Ricardian Model, Specific-Factors Model, Heckscher-Ohlin Model, trade policy, tariffs, quotas, trade agreements.
+2. "An Introduction to International Economics" by Kenneth Reinert — absolute/comparative advantage, FDI, international finance, development.
+3. TradeIQ PRO Dataset — 20 real trade scenarios covering cacao, shrimp, bananas, avocado, coffee, quinoa, flowers, lithium, tuna, blueberries, palm oil, textiles, cacao butter, pineapple, soybeans, tilapia, herbs, mango, rare earths.
 
-1. "International Trade" by Robert C. Feenstra & Alan M. Taylor (3rd Edition)
-   - Part 1: Introduction to International Trade (Ch.1: Trade in the Global Economy)
-   - Part 2: Patterns of International Trade:
-     * Ch.2: Trade and Technology - The Ricardian Model
-     * Ch.3: Gains and Losses from Trade - Specific-Factors Model
-     * Ch.4: Trade and Resources - Heckscher-Ohlin Model
-     * Ch.5: Movement of Labor and Capital between Countries
-   - Part 3: New Explanations for International Trade:
-     * Ch.6: Increasing Returns to Scale and Monopolistic Competition
-     * Ch.7: Offshoring of Goods and Services
-   - Part 4: International Trade Policies:
-     * Ch.8: Import Tariffs and Quotas Under Perfect Competition
-     * Ch.9: Import Tariffs and Quotas Under Imperfect Competition
-     * Ch.10: Export Subsidies in Agriculture and High-Technology Industries
-     * Ch.11: International Agreements: Trade, Labor, and the Environment
+ALWAYS respond in English. Be precise and academic.
 
-2. "An Introduction to International Economics: New Perspectives on the World Economy" by Kenneth A. Reinert (2nd Edition, Cambridge University Press, 2012)
-   - Part I: International Trade (Absolute Advantage, Comparative Advantage, Intra-industry Trade, Trade Policy)
-   - Part II: International Production (Foreign Market Entry, FDI, Global Value Chains)
-   - Part III: International Finance (Accounting Frameworks, Exchange Rates, IMF)
-   - Part IV: International Development (Development Concepts, Trade and Development)
+DASHBOARD CAPABILITY — CRITICAL:
+When user asks for dashboard, chart, graph, visualization, market analysis, price data, or analytics of ANY product/commodity, respond ONLY with this exact JSON format (nothing before or after):
+{"type":"dashboard","title":"Title","subtitle":"Description","cards":[{"label":"Metric","value":"XX","unit":"unit","color":"blue|cyan|purple|pink|green"}],"barChart":{"title":"Chart Title","data":[{"name":"Label","value":number}],"color":"#00d4ff"},"lineChart":{"title":"Trend","data":[{"year":"YYYY","value":number}],"color":"#06ffa5"},"radarChart":{"title":"Risk/Factors","labels":["F1","F2","F3","F4","F5"],"values":[n,n,n,n,n]},"insights":["insight 1","insight 2","insight 3"],"source":"TradeIQ PRO Dataset — Feenstra & Taylor / Reinert"}
 
-ALWAYS respond in English. Be precise, academic, and cite concepts from these textbooks when relevant.
+Dashboard triggers: "dashboard", "chart", "graph", "show me data", "price of", "market data", "analytics", "visualize", "trade data"`;
 
-DASHBOARD CAPABILITY — VERY IMPORTANT:
-When a user asks for a dashboard, chart, graph, data visualization, or market analysis of any commodity, country, or trade topic, you MUST respond with a JSON block in this EXACT format (nothing else before or after the JSON):
+// Build scenario-specific context (only when relevant)
+function buildScenarioContext(scenario) {
+  if (!scenario) return "";
+  return `\n\nTRADEIQ PRO SCENARIO DATA FOR: ${scenario.product}
+Best Market: ${scenario.bestMarket || scenario.analysis?.bestMarket} (Score: ${scenario.score}/100)
+Origin: ${scenario.origin || "various"}
+${scenario.situation ? `Situation: ${scenario.situation}` : ""}
+Analysis: Demand: ${scenario.analysis?.demand || "N/A"} | Competition: ${scenario.analysis?.competition || "N/A"} | Logistics: ${scenario.analysis?.logistics || "N/A"} | Tariffs: ${scenario.analysis?.tariffs || "N/A"}
+Key Prices: ${JSON.stringify(scenario.keyPrices || {})}
+${scenario.insights ? `Key Insights:\n${scenario.insights.slice(0, 4).map(i => `- ${i}`).join("\n")}` : ""}
+${scenario.decision ? `AI Decision: ${scenario.decision}` : ""}
+${scenario.dashboardData ? `Dashboard Data Available: cards=${scenario.dashboardData.cards?.length}, barChart=${scenario.dashboardData.barChart?.data?.length} items, lineChart=${scenario.dashboardData.lineChart?.data?.length} points` : ""}
 
-{"type":"dashboard","title":"Dashboard Title","subtitle":"Brief description","cards":[{"label":"Metric Name","value":"XX","unit":"unit","color":"blue|cyan|purple|pink|green"},...],"barChart":{"title":"Chart Title","data":[{"name":"Label","value":number},...],"color":"#00d4ff"},"lineChart":{"title":"Trend Title","data":[{"year":"YYYY","value":number},...],"color":"#06ffa5"},"radarChart":{"title":"Risk/Factor Analysis","labels":["Factor1","Factor2","Factor3","Factor4","Factor5"],"values":[number,number,number,number,number]},"insights":["Insight 1 from textbook theory","Insight 2","Insight 3"],"source":"Based on Feenstra & Taylor / Reinert - International Economics"}
+When generating a dashboard for this product, use the exact data values provided above.`;
+}
 
-Dashboard triggers: "dashboard", "show me data", "chart", "graph", "market analysis", "price of", "export data", "trade data", "visualize", "analytics"
-
-For example:
-- "dashboard of banana prices" → generate banana export dashboard
-- "show me cacao market data" → generate cacao dashboard
-- "chart of Ecuador exports" → generate Ecuador export dashboard
-- "trade analytics for shrimp" → generate shrimp trade dashboard
-
-Use realistic, academically-grounded data in dashboards. Reference Feenstra & Taylor or Reinert frameworks when providing insights.
-
-For regular questions (not dashboards), respond in clear prose using concepts from the textbooks. Cover:
-- Ricardian Model, Specific-Factors Model, Heckscher-Ohlin Model
-- Comparative advantage, absolute advantage, opportunity cost
-- Tariffs, quotas, trade policy instruments
-- Gains from trade, welfare effects
-- FDI, multinational corporations, offshoring
-- International finance, exchange rates, balance of payments
-- Trade agreements (WTO, FTAs, preferential trade)
-- Globalization and development
-
-Keep responses concise but academically rigorous (max 350 words unless more detail is requested).`;
-
-// Dashboard renderer component
+// Dashboard renderer
 function DashboardView({ data }) {
   const COLORS = {
     blue: "#00d4ff", cyan: "#06ffa5", purple: "#a855f7",
@@ -69,8 +47,7 @@ function DashboardView({ data }) {
   };
 
   const radarData = data.radarChart?.labels?.map((label, i) => ({
-    subject: label,
-    value: data.radarChart.values[i]
+    subject: label, value: data.radarChart.values[i]
   })) || [];
 
   return (
@@ -79,8 +56,6 @@ function DashboardView({ data }) {
         <div className="dash-title">{data.title}</div>
         <div className="dash-subtitle">{data.subtitle}</div>
       </div>
-
-      {/* KPI Cards */}
       <div className="kpi-grid">
         {data.cards?.map((card, i) => (
           <div className="kpi-card" key={i} style={{ "--accent": COLORS[card.color] || COLORS.blue }}>
@@ -89,8 +64,6 @@ function DashboardView({ data }) {
           </div>
         ))}
       </div>
-
-      {/* Charts Row */}
       <div className="charts-row">
         {data.barChart && (
           <div className="chart-box">
@@ -98,8 +71,8 @@ function DashboardView({ data }) {
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={data.barChart.data} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                <XAxis dataKey="name" tick={{ fill: "#64748b", fontSize: 11 }} />
-                <YAxis tick={{ fill: "#64748b", fontSize: 11 }} />
+                <XAxis dataKey="name" tick={{ fill: "#64748b", fontSize: 10 }} />
+                <YAxis tick={{ fill: "#64748b", fontSize: 10 }} />
                 <Tooltip contentStyle={{ background: "#0f172a", border: "1px solid rgba(0,212,255,0.2)", borderRadius: 8, color: "#e2e8f0" }} />
                 <Bar dataKey="value" fill={data.barChart.color || "#00d4ff"} radius={[4, 4, 0, 0]} />
               </BarChart>
@@ -112,35 +85,31 @@ function DashboardView({ data }) {
             <ResponsiveContainer width="100%" height={200}>
               <LineChart data={data.lineChart.data} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                <XAxis dataKey="year" tick={{ fill: "#64748b", fontSize: 11 }} />
-                <YAxis tick={{ fill: "#64748b", fontSize: 11 }} />
+                <XAxis dataKey="year" tick={{ fill: "#64748b", fontSize: 10 }} />
+                <YAxis tick={{ fill: "#64748b", fontSize: 10 }} />
                 <Tooltip contentStyle={{ background: "#0f172a", border: "1px solid rgba(0,212,255,0.2)", borderRadius: 8, color: "#e2e8f0" }} />
-                <Line type="monotone" dataKey="value" stroke={data.lineChart.color || "#06ffa5"} strokeWidth={2} dot={{ fill: data.lineChart.color || "#06ffa5" }} />
+                <Line type="monotone" dataKey="value" stroke={data.lineChart.color || "#06ffa5"} strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
         )}
       </div>
-
-      {/* Radar Chart */}
       {radarData.length > 0 && (
         <div className="chart-box" style={{ marginBottom: 16 }}>
           <div className="chart-title">{data.radarChart.title}</div>
-          <ResponsiveContainer width="100%" height={220}>
+          <ResponsiveContainer width="100%" height={200}>
             <RadarChart data={radarData}>
               <PolarGrid stroke="rgba(255,255,255,0.08)" />
-              <PolarAngleAxis dataKey="subject" tick={{ fill: "#94a3b8", fontSize: 11 }} />
+              <PolarAngleAxis dataKey="subject" tick={{ fill: "#94a3b8", fontSize: 10 }} />
               <Radar dataKey="value" stroke="#a855f7" fill="#a855f7" fillOpacity={0.2} strokeWidth={2} />
               <Tooltip contentStyle={{ background: "#0f172a", border: "1px solid rgba(168,85,247,0.3)", borderRadius: 8, color: "#e2e8f0" }} />
             </RadarChart>
           </ResponsiveContainer>
         </div>
       )}
-
-      {/* Insights */}
       {data.insights?.length > 0 && (
         <div className="insights-box">
-          <div className="insights-title">📚 Academic Insights</div>
+          <div className="insights-title">📚 Trade Intelligence Insights</div>
           {data.insights.map((ins, i) => (
             <div className="insight-item" key={i}>
               <span className="insight-dot">▸</span>
@@ -149,7 +118,6 @@ function DashboardView({ data }) {
           ))}
         </div>
       )}
-
       <div className="dash-source">{data.source}</div>
     </div>
   );
@@ -163,8 +131,6 @@ function Message({ msg }) {
       </div>
     );
   }
-
-  // Check if dashboard
   let dashData = null;
   try {
     const trimmed = msg.content.trim();
@@ -172,7 +138,6 @@ function Message({ msg }) {
       dashData = JSON.parse(trimmed);
     }
   } catch (_) {}
-
   return (
     <div className="msg bot-msg">
       <div className="bot-avatar">E</div>
@@ -188,27 +153,28 @@ function Message({ msg }) {
 }
 
 const SUGGESTIONS = [
-  "Dashboard: banana export prices",
-  "Explain the Ricardian Model",
-  "Dashboard: Ecuador trade analytics",
+  "Dashboard: banana prices",
+  "Dashboard: cacao market",
+  "Dashboard: shrimp exports",
   "What is comparative advantage?",
-  "Dashboard: cacao market data",
-  "How do tariffs affect welfare?",
+  "Dashboard: lithium trade",
+  "Explain the Ricardian Model",
 ];
 
 export default function App() {
   const [messages, setMessages] = useState([
     {
       role: "assistant",
-      content: `Welcome to EconBot 📊
+      content: `Welcome to EconBot — Trade Intelligence Platform ⚡
 
-I'm your AI assistant for International Economics and Globalization, trained on:
+I'm trained on:
 • Feenstra & Taylor — "International Trade"
-• Reinert — "An Introduction to International Economics"
+• Reinert — "Introduction to International Economics"
+• TradeIQ PRO Dataset — 20 real trade scenarios
 
-I can explain trade models, analyze policies, and generate live dashboards for any commodity or market.
+Available products: Cacao, Shrimp, Bananas, Avocado, Coffee, Quinoa, Flowers, Lithium, Tuna, Blueberries, Palm Oil, Textiles, Cacao Butter, Pineapple, Soybeans, Tilapia, Herbs, Mango, Rare Earths
 
-Try asking for a dashboard: "Show me a dashboard for banana exports" or ask any theory question.`,
+Try: "Dashboard: banana prices" or "What is comparative advantage?"`,
     },
   ]);
   const [input, setInput] = useState("");
@@ -230,6 +196,12 @@ Try asking for a dashboard: "Show me a dashboard for banana exports" or ask any 
 
     try {
       const apiKey = import.meta.env.VITE_GROQ_KEY;
+
+      // Smart context injection — only load relevant scenario
+      const scenario = findScenario(userText);
+      const scenarioContext = buildScenarioContext(scenario);
+      const systemPrompt = BASE_SYSTEM + scenarioContext;
+
       const response = await fetch(GROQ_API_URL, {
         method: "POST",
         headers: {
@@ -239,8 +211,8 @@ Try asking for a dashboard: "Show me a dashboard for banana exports" or ask any 
         body: JSON.stringify({
           model: GROQ_MODEL,
           messages: [
-            { role: "system", content: SYSTEM_PROMPT },
-            ...newMessages.map((m) => ({
+            { role: "system", content: systemPrompt },
+            ...newMessages.slice(-6).map((m) => ({
               role: m.role === "assistant" ? "assistant" : "user",
               content: m.content,
             })),
@@ -267,11 +239,11 @@ Try asking for a dashboard: "Show me a dashboard for banana exports" or ask any 
           <div className="logo">
             <span className="logo-icon">⚡</span>
             <div>
-              <div className="logo-title">EconBot</div>
-              <div className="logo-sub">International Trade Intelligence · Feenstra & Taylor · Reinert</div>
+              <div className="logo-title">EconBot — TradeIQ PRO</div>
+              <div className="logo-sub">20 Trade Scenarios · Feenstra & Taylor · Reinert · Groq LLaMA 3.3</div>
             </div>
           </div>
-          <div className="status-dot" title="Groq connected" />
+          <div className="status-dot" title="Connected" />
         </div>
       </header>
 
@@ -305,14 +277,14 @@ Try asking for a dashboard: "Show me a dashboard for banana exports" or ask any 
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
-            placeholder="Ask a question or request a dashboard..."
+            placeholder="Ask about trade theory or request a dashboard..."
             disabled={loading}
           />
           <button className="send-btn" onClick={() => sendMessage()} disabled={loading || !input.trim()}>
             {loading ? "..." : "→"}
           </button>
         </div>
-        <p className="footer-note">Powered by Groq · LLaMA 3.3 70B · Feenstra & Taylor · Reinert</p>
+        <p className="footer-note">TradeIQ PRO · Groq LLaMA 3.3 70B · Smart context injection — minimal token usage</p>
       </footer>
     </div>
   );
