@@ -1,4 +1,8 @@
-// TradeIQ PRO — Question Bank with Chart Data
+// TradeIQ PRO — Hybrid Dataset
+// Combines 10 game scenarios with TradeBot TRADE_SCENARIOS format
+// Used by both Global Trade Challenge (game) and TradeChatBot
+
+// ─── GAME QUESTIONS (for the game interface) ───
 export const QUESTIONS = [
   {
     id: 1,
@@ -242,8 +246,339 @@ export const QUESTIONS = [
   }
 ];
 
+// ─── TRADE SCENARIOS (for TradeChatBot) ───
+export const TRADE_SCENARIOS = {
+  cacao: {
+    product: "Fine-Aroma Cacao",
+    keywords: ["cacao", "cocoa", "chocolate", "kakao"],
+    bestMarket: "Germany (EU)",
+    score: 94,
+    origin: "Ecuador",
+    situation: "Ecuadorian cooperative produces 200 MT/year of certified fine-aroma cacao. Currently sells to domestic trader at $2,800/MT commodity pricing.",
+    question: "Which market offers highest long-term revenue for Ecuadorian fine-aroma cacao at premium pricing?",
+    analysis: {
+      bestMarket: "Germany",
+      score: 94,
+      demand: "Growing +12%/year in specialty segment",
+      competition: "Medium — Ecuador holds differentiated position through origin and flavor profile",
+      logistics: "Moderate — 21-day sea transit Guayaquil to Hamburg",
+      tariffs: "EU: 0% duty on raw cacao beans; 8% on processed chocolate"
+    },
+    keyPrices: {
+      commodity: "$2,800/MT",
+      germanySpecialty: "$7,000–$9,500/MT",
+      premiumMultiplier: "3.3x over commodity"
+    },
+    insights: [
+      "Germany: 200+ premium artisan chocolate manufacturers paying $7,000–9,500/MT",
+      "EU specialty chocolate segment grew 11.8% CAGR 2018–2023",
+      "HCP certification ($3,200) enables $8,500–9,500/MT pricing tier",
+      "China: <3% fine-chocolate penetration, needs 3–5 years brand development"
+    ],
+    decision: "Germany is the primary export market. Obtain HCP certification, establish direct relationships at ISM Cologne, and export under single-origin branding."
+  },
+
+  shrimp: {
+    product: "White Shrimp (Tariff Response)",
+    keywords: ["shrimp", "camarón", "camarones", "prawn", "tariff"],
+    bestMarket: "Mixed Strategy",
+    score: 88,
+    origin: "Ecuador",
+    situation: "Ecuadorian shrimp company facing 25% import tariff. Must balance cost increases with revenue optimization.",
+    question: "How to respond to sudden 25% import tariff increase?",
+    analysis: {
+      bestMarket: "Blended sourcing",
+      score: 88,
+      demand: "Stable to growing +5%/year; strong post-pandemic foodservice recovery",
+      competition: "High — India, Vietnam, Indonesia established",
+      logistics: "Moderate — 18-day sea transit Guayaquil to Miami",
+      tariffs: "US: 0% tariff under GSP; but tariff increases possible"
+    },
+    keyPrices: {
+      ecuadorCost: "$5.25/kg",
+      vietnamCost: "$3.80/kg",
+      blendedCost: "$4.32/kg (60/40)",
+      priceIncrease: "8% menu adjustment acceptable to 68% of diners"
+    },
+    insights: [
+      "Split sourcing strategy reduces cost exposure while maintaining quality",
+      "Vietnamese shrimp has different feed formulation — quality risk",
+      "Price increase of 8% accepted by 68% of diners per NRA research",
+      "USA: world's largest per-capita shrimp consumer"
+    ],
+    decision: "Split 60% Vietnam + 40% Ecuador, raise menu prices 8%. This reduces cost exposure while maintaining brand quality and accepting acceptable market price increase."
+  },
+
+  banana: {
+    product: "Bananas (Certification Strategy)",
+    keywords: ["banana", "banano", "bananas", "plátano", "certification"],
+    bestMarket: "Germany (EU)",
+    score: 91,
+    origin: "Ecuador",
+    situation: "Ecuador's largest banana client (40% of revenue) requires Rainforest Alliance certification. Must balance certification investment with revenue continuity.",
+    question: "How to respond to certification requirement from major EU client?",
+    analysis: {
+      bestMarket: "Germany (EU)",
+      score: 91,
+      demand: "Stable +2%/year in EU; German consumers pay 15–20% premium for certified",
+      competition: "High — Colombia and Philippines already RA-certified",
+      logistics: "Well-established — Guayaquil to Rotterdam/Hamburg, 21-day transit",
+      tariffs: "EU: EUR 114/MT reduced tariff for GSP beneficiaries"
+    },
+    keyPrices: {
+      euCertified: "$1.40–1.60/box",
+      middleEast: "$0.80–0.85/box",
+      certificationCost: "$45,000 (12 months)",
+      roiMultiple: "8.4x over 3 years"
+    },
+    insights: [
+      "Ecuador is world's #1 banana exporter — $3.8B annual revenue",
+      "EU absorbs ~40% of Ecuador's banana exports — most critical market",
+      "RA certification ROI: 8.4x over 3 years based on retained contracts + premium",
+      "Middle East market provides cash flow during certification period"
+    ],
+    decision: "Dual-track strategy: Start RA certification immediately + bridge to Middle East for cash flow during 12-month certification window. Retain EU premium market access."
+  },
+
+  blueberry: {
+    product: "Blueberries (Logistics Optimization)",
+    keywords: ["blueberry", "blueberries", "arándano", "arandano", "logistics", "peru"],
+    bestMarket: "Germany (EU)",
+    score: 88,
+    origin: "Peru",
+    situation: "Peruvian blueberry producer choosing logistics route for peak season. Must maximize revenue despite short shelf life (21-25 days).",
+    question: "Which logistics route maximizes net revenue during peak season?",
+    analysis: {
+      bestMarket: "Germany (EU Sea Freight)",
+      score: 88,
+      demand: "Growing +22%/year in EU; avocado consumption in Germany tripled 2016–2023",
+      competition: "Medium — Peru and South Africa dominate",
+      logistics: "Complex — 18-day sea transit; requires cold chain at 5–7°C",
+      tariffs: "EU: 4% tariff; no quota restrictions"
+    },
+    keyPrices: {
+      euSeaFreight: "$7.40/kg net",
+      euAirFreight: "$5.70/kg net",
+      usaAirFreight: "$4.10/kg net",
+      euAdvantage: "+$3.30/kg vs USA air"
+    },
+    insights: [
+      "EU pays $1.60/kg more than USA",
+      "Sea freight saves $1.70/kg vs air",
+      "Combined: +$3.30/kg total advantage for EU sea route",
+      "Shelf life: 21-25 days refrigerated matches 21-day EU sea transit"
+    ],
+    decision: "Germany (EU) sea freight route maximizes revenue. EU prices higher + sea freight lower cost = +$3.30/kg net advantage vs USA air freight route."
+  },
+
+  flowers: {
+    product: "Cut Flowers (AI Demand Forecasting)",
+    keywords: ["flowers", "flores", "roses", "rosas", "floriculture", "ai", "demand"],
+    bestMarket: "Germany",
+    score: 86,
+    origin: "Kenya",
+    situation: "Kenyan rose exporter with AI forecast showing 34% higher demand in Germany next February (87% model accuracy). Must decide whether to act on forecast.",
+    question: "Should you invest in pre-booking freight for AI-forecasted demand spike?",
+    analysis: {
+      bestMarket: "Germany",
+      score: 86,
+      demand: "Growing +12%/year in EU specialty segment",
+      competition: "Medium — Ethiopia, Kenya compete",
+      logistics: "Fast — 2-day air freight from Nairobi to Hamburg",
+      tariffs: "EU: 0% tariff on cut flowers"
+    },
+    keyPrices: {
+      standardFreight: "$0.08–0.12/stem",
+      spotFreight: "$0.20–0.36/stem (2.5–3× multiplier)",
+      preBookedSavings: "$0.08–0.12/stem per flower"
+    },
+    insights: [
+      "AI model has 87% historical accuracy on seasonal demand",
+      "Pre-booking requires 21-day lead time",
+      "Spot freight rates are 2.5–3× standard during peaks",
+      "Pre-booking at standard rates vs 3× spot = major savings"
+    ],
+    decision: "At 87% accuracy, pre-book freight capacity 21 days in advance. Pre-booking at standard vs 2.5–3× spot rates delivers major cost advantage if forecast is correct."
+  },
+
+  coffee: {
+    product: "Specialty Coffee (Buyer Selection)",
+    keywords: ["coffee", "café", "arabica", "specialty coffee", "colombia"],
+    bestMarket: "Germany",
+    score: 90,
+    origin: "Colombia",
+    situation: "Colombian specialty coffee cooperative (86-92 SCA score) choosing between commodity trader, direct specialty roaster, and D2C pilot.",
+    question: "Which buyer maximizes sustainable long-term revenue?",
+    analysis: {
+      bestMarket: "Germany",
+      score: 90,
+      demand: "Growing +12%/year in EU specialty segment",
+      competition: "High — Ethiopia, Kenya, Guatemala, Panama target EU",
+      logistics: "Moderate — 28-day sea transit to Hamburg",
+      tariffs: "EU: 0% on green coffee; 7.5% on roasted"
+    },
+    keyPrices: {
+      brokerPrice: "$4.20/lb",
+      germanyDirectRoaster: "$6.80/lb",
+      d2cPilot: "$9.50/lb (3 months only)",
+      improvement: "62% revenue increase vs broker"
+    },
+    insights: [
+      "Germany is Europe's largest specialty coffee market",
+      "Direct roaster relationship = 62% price premium over broker",
+      "D2C price attractive but 3-month pilot is too fragile as primary revenue",
+      "Broker contract eliminates upside as specialty premiums widen"
+    ],
+    decision: "German specialty roaster at $6.80/lb delivers 62% revenue improvement over broker. Direct relationship prioritizes long-term premium market access over volatile D2C exposure."
+  },
+
+  logistics: {
+    product: "Red Sea Crisis (Logistics Crisis Management)",
+    keywords: ["red sea", "logistics", "crisis", "flowers", "freight"],
+    bestMarket: "Air Freight",
+    score: 85,
+    origin: "Kenya",
+    situation: "Kenyan cut flower exporter facing Red Sea crisis: container costs +250%, transit +12 days. 7-day shelf life makes sea routes unviable.",
+    question: "Which logistics strategy keeps fresh flowers viable to European markets?",
+    analysis: {
+      bestMarket: "Air Freight",
+      score: 85,
+      demand: "Stable during crisis; premium orders maintain higher prices",
+      competition: "All competitors face same crisis — first-mover advantage for air freight",
+      logistics: "Critical constraint — shelf life is hard limit",
+      tariffs: "EU: 0% on cut flowers"
+    },
+    keyPrices: {
+      suezRoute: "18 days (exceeds 7-day shelf life)",
+      capeRoute: "30 days (exceeds shelf life)",
+      airFreight: "2 days (preserves shelf life)",
+      airCost: "€4.50–5.50/kg",
+      wholesale: "€8–14/kg (remains profitable)"
+    },
+    insights: [
+      "Suez route 18 days exceeds 7-day shelf life — flowers unsellable",
+      "Cape of Good Hope 30 days makes product worthless",
+      "Air freight at €4.50–5.50/kg cost remains profitable with €8–14/kg wholesale value",
+      "Valentine's and Mother's Day = 40–60% of annual revenue — cannot pause"
+    ],
+    decision: "Air freight premium orders. At €8–14/kg wholesale and €4.50–5.50/kg air freight, premium roses remain profitable. Sea routes (Suez 18 days, Cape 30 days) exceed shelf life."
+  },
+
+  lithium: {
+    product: "Lithium Value Chain",
+    keywords: ["lithium", "litio", "chile", "battery", "ev", "value chain"],
+    bestMarket: "USA (with local processing)",
+    score: 92,
+    origin: "Chile",
+    situation: "Chile holds 26% of global lithium reserves. Must choose between commodity export vs value-added processing.",
+    question: "What is Chile's highest-value lithium export strategy?",
+    analysis: {
+      bestMarket: "USA (with local processing)",
+      score: 92,
+      demand: "EV market growing +38%/yr; IRA incentivizes FTA-partner supply",
+      competition: "Australia, Argentina, DRC competing for US contracts",
+      logistics: "Sea freight feasible for both carbonate and hydroxide",
+      tariffs: "USA: 0% under IRA for qualified partners"
+    },
+    keyPrices: {
+      rawCarbonate: "$21.30/kg NE Asia",
+      batteryGradeHydroxide: "$35–45/kg (2–4× premium)",
+      processingValue: "$13.70–23.70/kg additional value"
+    },
+    insights: [
+      "Battery-grade hydroxide commands 2–4× raw carbonate price",
+      "EV manufacturers willing to fund local processing via FDI",
+      "IRA mandates FTA-partner content — Chile qualifies",
+      "China pays commodity pricing but has geopolitical leverage risk"
+    ],
+    decision: "Attract EV manufacturers to process locally. Battery-grade hydroxide commands 2–4× raw carbonate. FDI from EV manufacturers funds processing investment."
+  },
+
+  chocolate: {
+    product: "Chocolate Processing (Vertical Integration)",
+    keywords: ["chocolate", "cacao processing", "value added", "ecuador"],
+    bestMarket: "EU",
+    score: 87,
+    origin: "Ecuador",
+    situation: "Ecuador exports raw cacao at $2,800/MT. Must evaluate vertical integration into chocolate processing.",
+    question: "Should Ecuador invest in domestic chocolate processing?",
+    analysis: {
+      bestMarket: "EU",
+      score: 87,
+      demand: "Growing +8%/year in premium chocolate segment",
+      competition: "Belgium, Switzerland dominate premium; Ecuador can compete on origin",
+      logistics: "Sea freight feasible for processed chocolate",
+      tariffs: "EU: 8% on processed chocolate vs 0% on raw cacao"
+    },
+    keyPrices: {
+      rawCacao: "$2,800/MT",
+      artisanChocolate: "$15,000/MT",
+      premiumBranded: "$22,000/MT",
+      luxuryBrand: "$35,000/MT",
+      processingMultiplier: "4.4x for artisan level"
+    },
+    insights: [
+      "Processing multiplies value 4.4x even after 8% EU duty",
+      "Factory investment: $2–4M for 500MT/yr capacity",
+      "Ecuador has 35–45% labor cost advantage vs EU",
+      "Long-term competitive advantage through vertical integration"
+    ],
+    decision: "Invest in domestic chocolate processing. $2,800 → $10,000+/MT creates compelling unit economics even with 8% EU duty. 4.4x value multiplier justifies capital investment."
+  },
+
+  quinoa: {
+    product: "Quinoa (Geographic Indication Strategy)",
+    keywords: ["quinoa", "quinua", "bolivia", "gi", "geographic indication"],
+    bestMarket: "EU",
+    score: 88,
+    origin: "Bolivia",
+    situation: "Bolivia's Royal Quinoa faces price competition from Peru and Ecuador. Must differentiate through brand and certification.",
+    question: "How does Bolivia protect premium positioning against new competitors?",
+    analysis: {
+      bestMarket: "EU",
+      score: 88,
+      demand: "Growing +12%/yr in EU health food market",
+      competition: "High — Peru and Ecuador undercutting by 15–20%",
+      logistics: "Sea freight feasible for dried quinoa",
+      tariffs: "EU: 0% on quinoa imports"
+    },
+    keyPrices: {
+      commodityFob: "$2,000/MT",
+      giCertified: "$6,500/kg EU retail",
+      giOrganic: "Commands 30–60% premium over commodity",
+      certificationCost: "$30–50K one-time + $6–12K/yr"
+    },
+    insights: [
+      "Geographic Indication legally differentiates Bolivian Royal Quinoa",
+      "EU pays 30–60% premium for certified origin",
+      "GI registration cost: $30–50K one-time",
+      "Organic certification: $6–12K/yr",
+      "Peru and Ecuador lack geographic origin claims"
+    ],
+    decision: "GI registration + organic certification + EU health food brand partnerships. Geographic Indication legally differentiates Bolivian Royal Quinoa and unlocks 30–60% premium pricing."
+  }
+};
+
 export const GROQ_MODEL = 'llama-3.3-70b-versatile';
 export const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
+
+// Keyword matching function — finds the right scenario for a user query
+export function findScenario(query) {
+  const q = query.toLowerCase();
+  for (const [key, scenario] of Object.entries(TRADE_SCENARIOS)) {
+    if (scenario.keywords.some(kw => q.includes(kw.toLowerCase()))) {
+      return scenario;
+    }
+  }
+  return null;
+}
+
+// Get a compact summary of all scenarios for general trade queries
+export function getAllScenariosSummary() {
+  return Object.values(TRADE_SCENARIOS).map(s =>
+    `${s.product} (origin: ${s.origin}) — Best Market: ${s.bestMarket} — Score: ${s.score}/100`
+  ).join('\n');
+}
 
 export function buildGroqPrompt(question, p1Answer, p2Answer, p1Name, p2Name) {
   const p1opt = p1Answer >= 0 ? question.opts[p1Answer] : null;
