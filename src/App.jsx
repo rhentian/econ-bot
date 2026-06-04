@@ -10,10 +10,10 @@ const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 const GROQ_MODEL = "llama-3.3-70b-versatile";
 
 // Base system prompt — always sent (minimal tokens)
-const BASE_SYSTEM = `You are EconBot, an AI Trade Intelligence Assistant trained on:
+const BASE_SYSTEM = `You are TradeChatBot, an AI Trade Intelligence Assistant trained on:
 1. "International Trade" by Feenstra & Taylor — Ricardian Model, Specific-Factors Model, Heckscher-Ohlin Model, trade policy, tariffs, quotas, trade agreements.
 2. "An Introduction to International Economics" by Kenneth Reinert — absolute/comparative advantage, FDI, international finance, development.
-3. TradeIQ PRO Dataset — 20 real trade scenarios covering cacao, shrimp, bananas, avocado, coffee, quinoa, flowers, lithium, tuna, blueberries, palm oil, textiles, cacao butter, pineapple, soybeans, tilapia, herbs, mango, rare earths.
+3. TradeIQ PRO Dataset — 10 real trade scenarios covering fine-aroma cacao, shrimp tariffs, banana certifications, blueberries logistics, cut flowers, specialty coffee, Red Sea crisis, lithium value chains, chocolate processing, and quinoa geographic indication.
 
 ALWAYS respond in English. Be precise and academic.
 
@@ -140,7 +140,7 @@ function Message({ msg }) {
   } catch (_) {}
   return (
     <div className="msg bot-msg">
-      <div className="bot-avatar">E</div>
+      <div className="bot-avatar">T</div>
       <div className="msg-bubble bot-bubble">
         {dashData ? (
           <DashboardView data={dashData} />
@@ -153,11 +153,11 @@ function Message({ msg }) {
 }
 
 const SUGGESTIONS = [
-  "Dashboard: banana prices",
-  "Dashboard: cacao market",
-  "Dashboard: shrimp exports",
+  "Dashboard: cacao prices",
+  "Dashboard: shrimp tariff impact",
+  "Dashboard: banana certification ROI",
   "What is comparative advantage?",
-  "Dashboard: lithium trade",
+  "Dashboard: lithium value chain",
   "Explain the Ricardian Model",
 ];
 
@@ -165,16 +165,26 @@ export default function App() {
   const [messages, setMessages] = useState([
     {
       role: "assistant",
-      content: `Welcome to EconBot — Trade Intelligence Platform ⚡
+      content: `Welcome to TradeChatBot — Trade Intelligence Platform ⚡
 
 I'm trained on:
 • Feenstra & Taylor — "International Trade"
 • Reinert — "Introduction to International Economics"
-• TradeIQ PRO Dataset — 20 real trade scenarios
+• TradeIQ PRO Dataset — 10 real trade scenarios
 
-Available products: Cacao, Shrimp, Bananas, Avocado, Coffee, Quinoa, Flowers, Lithium, Tuna, Blueberries, Palm Oil, Textiles, Cacao Butter, Pineapple, Soybeans, Tilapia, Herbs, Mango, Rare Earths
+Available cases:
+1. Fine-Aroma Cacao (Ecuador)
+2. White Shrimp Tariff Shock (Ecuador)
+3. Banana Exports Certification Crisis
+4. Blueberries Logistics (Peru)
+5. Cut Flowers (Kenya)
+6. Specialty Coffee (Colombia)
+7. Red Sea Crisis Logistics
+8. Lithium Value Chain (Chile)
+9. Chocolate Processing (Ecuador)
+10. Quinoa Geographic Indication (Bolivia)
 
-Try: "Dashboard: banana prices" or "What is comparative advantage?"`,
+Try: "Dashboard: cacao prices" or "What is comparative advantage?"`,
     },
   ]);
   const [input, setInput] = useState("");
@@ -195,7 +205,7 @@ Try: "Dashboard: banana prices" or "What is comparative advantage?"`,
     setLoading(true);
 
     try {
-      const apiKey = import.meta.env.VITE_GROQ_KEY;
+      const apiKey = import.meta.env.VITE_GROQ_API_KEY;
 
       // Smart context injection — only load relevant scenario
       const scenario = findScenario(userText);
@@ -239,8 +249,8 @@ Try: "Dashboard: banana prices" or "What is comparative advantage?"`,
           <div className="logo">
             <span className="logo-icon">⚡</span>
             <div>
-              <div className="logo-title">EconBot — TradeIQ PRO</div>
-              <div className="logo-sub">20 Trade Scenarios · Feenstra & Taylor · Reinert · Groq LLaMA 3.3</div>
+              <div className="logo-title">TradeChatBot — TradeIQ PRO</div>
+              <div className="logo-sub">10 Trade Scenarios · Feenstra & Taylor · Reinert · Groq LLaMA 3.3</div>
             </div>
           </div>
           <div className="status-dot" title="Connected" />
@@ -253,7 +263,7 @@ Try: "Dashboard: banana prices" or "What is comparative advantage?"`,
         ))}
         {loading && (
           <div className="msg bot-msg">
-            <div className="bot-avatar">E</div>
+            <div className="bot-avatar">T</div>
             <div className="msg-bubble bot-bubble typing">
               <span /><span /><span />
             </div>
