@@ -4,42 +4,64 @@ import {
   ResponsiveContainer, RadarChart, Radar, PolarGrid,
   PolarAngleAxis, LineChart, Line
 } from "recharts";
-import { TRADE_SCENARIOS, findScenario, getAllScenariosSummary } from "./tradeData.js";
+import { COMMODITIES, findCommodity, getAllCommoditiesSummary, buildBotContext, GROQ_MODEL, GROQ_URL } from "./tradeData.js";
 
-const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
-const GROQ_MODEL = "llama-3.3-70b-versatile";
+// Base system prompt — always sent
+const BASE_SYSTEM = `You are TradeChatBot, a Global Trade Intelligence Assistant trained on:
 
-// Base system prompt — always sent (minimal tokens)
-const BASE_SYSTEM = `You are TradeChatBot, an AI Trade Intelligence Assistant trained on:
-1. "International Trade" by Feenstra & Taylor — Ricardian Model, Specific-Factors Model, Heckscher-Ohlin Model, trade policy, tariffs, quotas, trade agreements.
-2. "An Introduction to International Economics" by Kenneth Reinert — absolute/comparative advantage, FDI, international finance, development.
-3. TradeIQ PRO Dataset — 10 real trade scenarios covering fine-aroma cacao, shrimp tariffs, banana certifications, blueberries logistics, cut flowers, specialty coffee, Red Sea crisis, lithium value chains, chocolate processing, and quinoa geographic indication.
+1. ECONOMIC THEORY:
+   - Feenstra & Taylor "International Trade" — Ricardian Model, Specific-Factors Model, Heckscher-Ohlin, trade policy, tariffs, quotas, trade agreements
+   - Kenneth Reinert "Introduction to International Economics" — absolute/comparative advantage, FDI, international finance, development
+   
+2. REAL TRADE COMMODITIES & MARKETS:
+   - Fine-Aroma Cacao (Ecuador, Peru, Colombia)
+   - White Shrimp (Ecuador, Vietnam, India)
+   - Bananas (Ecuador, Philippines, Guatemala)
+   - Blueberries (Peru, Chile, South Africa)
+   - Cut Flowers (Kenya, Ethiopia, Colombia)
+   - Specialty Coffee (Colombia, Ethiopia, Kenya)
+   - Lithium (Chile, Australia, Argentina)
+   - Chocolate & Processed Foods (Ecuador, Belgium, Switzerland)
+   - Quinoa (Bolivia, Peru, Ecuador)
 
-ALWAYS respond in English. Be precise and academic.
+ALWAYS respond in English with precision and academic rigor.
 
 DASHBOARD CAPABILITY — CRITICAL:
-When user asks for dashboard, chart, graph, visualization, market analysis, price data, or analytics of ANY product/commodity, respond ONLY with this exact JSON format (nothing before or after):
-{"type":"dashboard","title":"Title","subtitle":"Description","cards":[{"label":"Metric","value":"XX","unit":"unit","color":"blue|cyan|purple|pink|green"}],"barChart":{"title":"Chart Title","data":[{"name":"Label","value":number}],"color":"#00d4ff"},"lineChart":{"title":"Trend","data":[{"year":"YYYY","value":number}],"color":"#06ffa5"},"radarChart":{"title":"Risk/Factors","labels":["F1","F2","F3","F4","F5"],"values":[n,n,n,n,n]},"insights":["insight 1","insight 2","insight 3"],"source":"TradeIQ PRO Dataset — Feenstra & Taylor / Reinert"}
+When user asks for dashboard, chart, graph, visualization, market analysis, price data, trends, or analytics of ANY commodity, respond ONLY with this exact JSON (nothing before or after):
+{"type":"dashboard","title":"Title","subtitle":"Description","cards":[{"label":"Metric","value":"XX","unit":"unit","color":"blue|cyan|purple|pink|green"}],"barChart":{"title":"Chart Title","data":[{"name":"Label","value":number}],"color":"#00d4ff"},"lineChart":{"title":"Trend","data":[{"year":"YYYY","value":number}],"color":"#06ffa5"},"radarChart":{"title":"Risk/Factors","labels":["F1","F2","F3","F4","F5"],"values":[n,n,n,n,n]},"insights":["insight 1","insight 2","insight 3"],"source":"TradeIQ BOT Dataset"}
 
-Dashboard triggers: "dashboard", "chart", "graph", "show me data", "price of", "market data", "analytics", "visualize", "trade data"`;
+Dashboard triggers: "dashboard", "chart", "graph", "show me", "price", "market data", "analytics", "visualize", "trend", "data"`;
 
-// Build scenario-specific context (only when relevant)
-function buildScenarioContext(scenario) {
-  if (!scenario) return "";
-  return `\n\nTRADEIQ PRO SCENARIO DATA FOR: ${scenario.product}
-Best Market: ${scenario.bestMarket || scenario.analysis?.bestMarket} (Score: ${scenario.score}/100)
-Origin: ${scenario.origin || "various"}
-${scenario.situation ? `Situation: ${scenario.situation}` : ""}
-Analysis: Demand: ${scenario.analysis?.demand || "N/A"} | Competition: ${scenario.analysis?.competition || "N/A"} | Logistics: ${scenario.analysis?.logistics || "N/A"} | Tariffs: ${scenario.analysis?.tariffs || "N/A"}
-Key Prices: ${JSON.stringify(scenario.keyPrices || {})}
-${scenario.insights ? `Key Insights:\n${scenario.insights.slice(0, 4).map(i => `- ${i}`).join("\n")}` : ""}
-${scenario.decision ? `AI Decision: ${scenario.decision}` : ""}
-${scenario.dashboardData ? `Dashboard Data Available: cards=${scenario.dashboardData.cards?.length}, barChart=${scenario.dashboardData.barChart?.data?.length} items, lineChart=${scenario.dashboardData.lineChart?.data?.length} points` : ""}
+// Build commodity-specific context
+function buildCommodityContext(commodity) {
+  if (!commodity) return "";
+  const c = commodity.data;
+  return `\n\nCOMMODITY ANALYSIS: ${c.name}
+Origins: ${c.origin.join(", ")}
+Current Price: ${c.market.currentPrice.value} (${c.market.currentPrice.source}) — ${c.market.currentPrice.trend}
+Global Demand: ${c.market.demandGrowth}
+Volume: ${c.market.volume}
+Top Importers: ${c.market.topImporters.join(", ")}
 
-When generating a dashboard for this product, use the exact data values provided above.`;
+Price Data:
+${Object.entries(c.market.priceBySegment || c.market.priceByDestination || c.market.priceByChannel || c.market.priceByOrigin || {})
+  .map(([k, v]) => `  ${k}: ${v}`)
+  .join("\n")}
+
+Logistics: ${c.logistics.mainPort} → ${c.logistics.mainDestination}
+Transit: ${c.logistics.transitTime}
+
+Tariffs:
+${Object.entries(c.tariffs).map(([region, rate]) => `  ${region}: ${rate}`).join("\n")}
+
+Key Insights:
+${c.marketInsights.slice(0, 5).map(i => `  • ${i}`).join("\n")}
+
+Competitors:
+${Object.entries(c.competitors || {}).map(([country, position]) => `  ${country}: ${position}`).join("\n")}`;
 }
 
-// Dashboard renderer
+// Dashboard viewer
 function DashboardView({ data }) {
   const COLORS = {
     blue: "#00d4ff", cyan: "#06ffa5", purple: "#a855f7",
@@ -131,6 +153,7 @@ function Message({ msg }) {
       </div>
     );
   }
+
   let dashData = null;
   try {
     const trimmed = msg.content.trim();
@@ -138,6 +161,7 @@ function Message({ msg }) {
       dashData = JSON.parse(trimmed);
     }
   } catch (_) {}
+
   return (
     <div className="msg bot-msg">
       <div className="bot-avatar">T</div>
@@ -153,38 +177,44 @@ function Message({ msg }) {
 }
 
 const SUGGESTIONS = [
-  "Dashboard: cacao prices",
-  "Dashboard: shrimp tariff impact",
-  "Dashboard: banana certification ROI",
-  "What is comparative advantage?",
+  "Dashboard: cacao market",
   "Dashboard: lithium value chain",
-  "Explain the Ricardian Model",
+  "Coffee prices in Germany",
+  "What is comparative advantage?",
+  "Banana certification benefits",
+  "Red Sea impact on flowers"
 ];
 
 export default function App() {
   const [messages, setMessages] = useState([
     {
       role: "assistant",
-      content: `Welcome to TradeChatBot — Trade Intelligence Platform ⚡
+      content: `Welcome to TradeChatBot — Global Trade Intelligence 🚀
 
-I'm trained on:
-• Feenstra & Taylor — "International Trade"
-• Reinert — "Introduction to International Economics"
-• TradeIQ PRO Dataset — 10 real trade scenarios
+I analyze real trade commodities and economic theory:
 
-Available cases:
-1. Fine-Aroma Cacao (Ecuador)
-2. White Shrimp Tariff Shock (Ecuador)
-3. Banana Exports Certification Crisis
-4. Blueberries Logistics (Peru)
-5. Cut Flowers (Kenya)
-6. Specialty Coffee (Colombia)
-7. Red Sea Crisis Logistics
-8. Lithium Value Chain (Chile)
-9. Chocolate Processing (Ecuador)
-10. Quinoa Geographic Indication (Bolivia)
+📊 COMMODITIES:
+• Fine-Aroma Cacao (Ecuador, Peru, Colombia)
+• White Shrimp (Ecuador, Vietnam, India)
+• Bananas (Ecuador, Philippines, Guatemala)
+• Blueberries (Peru, Chile, South Africa)
+• Cut Flowers (Kenya, Ethiopia, Colombia)
+• Specialty Coffee (Colombia, Ethiopia, Kenya)
+• Lithium (Chile, Australia, Argentina)
+• Chocolate (Ecuador, Belgium, Switzerland)
+• Quinoa (Bolivia, Peru, Ecuador)
 
-Try: "Dashboard: cacao prices" or "What is comparative advantage?"`,
+📚 THEORY:
+• Comparative Advantage & Ricardo's Model
+• Heckscher-Ohlin & Factor Endowments
+• Trade Policy, Tariffs, Certification
+• Value Chains & Vertical Integration
+
+Try:
+✓ "Dashboard: cacao market"
+✓ "What is comparative advantage?"
+✓ "Lithium value chain analysis"
+✓ "Coffee market trends"`,
     },
   ]);
   const [input, setInput] = useState("");
@@ -207,12 +237,12 @@ Try: "Dashboard: cacao prices" or "What is comparative advantage?"`,
     try {
       const apiKey = import.meta.env.VITE_GROQ_API_KEY;
 
-      // Smart context injection — only load relevant scenario
-      const scenario = findScenario(userText);
-      const scenarioContext = buildScenarioContext(scenario);
-      const systemPrompt = BASE_SYSTEM + scenarioContext;
+      // Find relevant commodity
+      const commodity = findCommodity(userText);
+      const commodityContext = buildCommodityContext(commodity);
+      const systemPrompt = BASE_SYSTEM + commodityContext;
 
-      const response = await fetch(GROQ_API_URL, {
+      const response = await fetch(GROQ_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -232,11 +262,16 @@ Try: "Dashboard: cacao prices" or "What is comparative advantage?"`,
         }),
       });
 
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.status}`);
+      }
+
       const data = await response.json();
       const reply = data.choices?.[0]?.message?.content || "No response. Please try again.";
       setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
     } catch (err) {
-      setMessages((prev) => [...prev, { role: "assistant", content: "❌ Connection error. Check your Groq API key." }]);
+      console.error(err);
+      setMessages((prev) => [...prev, { role: "assistant", content: "❌ Connection error. Check your Groq API key in .env" }]);
     } finally {
       setLoading(false);
     }
@@ -249,11 +284,11 @@ Try: "Dashboard: cacao prices" or "What is comparative advantage?"`,
           <div className="logo">
             <span className="logo-icon">⚡</span>
             <div>
-              <div className="logo-title">TradeChatBot — TradeIQ PRO</div>
-              <div className="logo-sub">10 Trade Scenarios · Feenstra & Taylor · Reinert · Groq LLaMA 3.3</div>
+              <div className="logo-title">TradeChatBot — Intelligence Platform</div>
+              <div className="logo-sub">9 Global Commodities · Trade Theory · Real Market Data</div>
             </div>
           </div>
-          <div className="status-dot" title="Connected" />
+          <div className="status-dot" title="Connected to Groq API" />
         </div>
       </header>
 
@@ -287,14 +322,14 @@ Try: "Dashboard: cacao prices" or "What is comparative advantage?"`,
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
-            placeholder="Ask about trade theory or request a dashboard..."
+            placeholder="Ask about trade theory, markets, or request a dashboard..."
             disabled={loading}
           />
           <button className="send-btn" onClick={() => sendMessage()} disabled={loading || !input.trim()}>
             {loading ? "..." : "→"}
           </button>
         </div>
-        <p className="footer-note">TradeIQ PRO · Groq LLaMA 3.3 70B · Smart context injection — minimal token usage</p>
+        <p className="footer-note">Groq LLaMA 3.3 70B · Smart Context Injection · Trade Intelligence</p>
       </footer>
     </div>
   );
