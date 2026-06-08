@@ -30,7 +30,9 @@ Keep responses concise — 2-3 sentences maximum for regular questions. CRITICAL
 
 DASHBOARD CAPABILITY — CRITICAL:
 When user asks for dashboard, chart, graph, visualization, market analysis, price data, trends, or analytics of ANY commodity, respond ONLY with this exact JSON (nothing before or after):
-{"type":"dashboard","title":"Title","subtitle":"Description","cards":[{"label":"Metric","value":"XX","unit":"unit","color":"blue|cyan|purple|pink|green"}],"barChart":{"title":"Chart Title","data":[{"name":"Label","value":number}],"color":"#00d4ff"},"lineChart":{"title":"Trend","data":[{"year":"YYYY","value":number}],"color":"#06ffa5"},"radarChart":{"title":"Risk/Factors","labels":["F1","F2","F3","F4","F5"],"values":[n,n,n,n,n]},"insights":["insight 1","insight 2","insight 3"],"source":"TradeIQ BOT Dataset"}
+Simplify dashboards: use only 1-2 charts max. Add clear labels to all axes. Include 3 bullet-point insights only.
+
+{"type":"dashboard","title":"Title","subtitle":"Description","cards":[{"label":"Metric","value":"XX","unit":"unit","color":"blue|cyan|purple|pink|green"}],"barChart":{"title":"Chart Title","data":[{"name":"Label","value":number,"label":"UNIT"}],"color":"#00d4ff"},"lineChart":{"title":"Trend","data":[{"year":"YYYY","value":number}],"color":"#06ffa5"},"radarChart":{"title":"Risk/Factors","labels":["F1","F2","F3","F4","F5"],"values":[n,n,n,n,n]},"insights":["insight 1","insight 2","insight 3"],"source":"TradeIQ BOT Dataset"}
 
 Dashboard triggers: "dashboard", "chart", "graph", "show me", "price", "market data", "analytics", "visualize", "trend", "data"`;
 
