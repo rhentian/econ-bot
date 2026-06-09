@@ -32,9 +32,7 @@ DASHBOARD CAPABILITY — CRITICAL:
 When user asks for dashboard, chart, graph, visualization, market analysis, price data, trends, or analytics of ANY commodity, respond ONLY with this exact JSON (nothing before or after):
 Simplify dashboards: use only 1-2 charts max. Add clear labels to all axes. Include 3 bullet-point insights only.
 
-{"type":"dashboard","title":"Title","subtitle":"Description","cards":[{"label":"Metric","value":"XX","unit":"unit","color":"blue|cyan|purple|pink|green"}],"barChart":{"title":"Chart Title","data":[{"name":"Label","value":number,"label":"UNIT"}],"color":"#00d4ff"},"lineChart":{"title":"Trend","data":[{"year":"YYYY","value":number}],"color":"#06ffa5"},"radarChart":{"title":"Risk/Factors","labels":["F1","F2","F3","F4","F5"],"values":[n,n,n,n,n]},"insights":["insight 1","insight 2","insight 3"],"source":"TradeIQ BOT Dataset"}
-
-Dashboard triggers: "dashboard", "chart", "graph", "show me", "price", "market data", "analytics", "visualize", "trend", "data"`;
+{"type":"dashboard","title":"Title","subtitle":"Description","cards":[{"label":"Metric","value":"XX","unit":"unit","color":"blue|cyan|purple|pink|green"}],"barChart":{"title":"Chart Title","data":[{"name":"Label","value":number}],"unit":"UNIT","color":"#00d4ff"},"lineChart":{"title":"Trend","data":[{"year":"YYYY","value":number}],"unit":"UNIT","color":"#06ffa5"},"radarChart":{"title":"Risk/Factors","labels":["F1","F2","F3","F4","F5"],"values":[n,n,n,n,n]},"insights":["insight 1","insight 2","insight 3"],"source":"TradeIQ BOT Dataset"}`;
 
 // Build commodity-specific context
 function buildCommodityContext(commodity) {
@@ -63,6 +61,30 @@ ${c.marketInsights.slice(0, 5).map(i => `  • ${i}`).join("\n")}
 
 Competitors:
 ${Object.entries(c.competitors || {}).map(([country, position]) => `  ${country}: ${position}`).join("\n")}`;
+}
+
+// Custom Tooltip con labels y valores (como en TRADE_IQ)
+function CustomTooltip({ active, payload, label, unit }) {
+  if (active && payload && payload.length) {
+    return (
+      <div style={{
+        background: 'rgba(15,23,42,0.95)',
+        border: '1px solid rgba(0,212,255,0.3)',
+        borderRadius: '6px',
+        padding: '8px 12px',
+        color: '#e2e8f0',
+        fontSize: '13px'
+      }}>
+        <p style={{ margin: '0 0 4px 0', color: '#00d4ff' }}>{label}</p>
+        {payload.map((entry, index) => (
+          <p key={index} style={{ margin: '2px 0', color: entry.color }}>
+            {entry.name}: {entry.value.toLocaleString()} {unit || ''}
+          </p>
+        ))}
+      </div>
+    );
+  }
+  return null;
 }
 
 // Dashboard viewer
@@ -94,13 +116,28 @@ function DashboardView({ data }) {
         {data.barChart && (
           <div className="chart-box">
             <div className="chart-title">{data.barChart.title}</div>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={data.barChart.data} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={data.barChart.data} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                <XAxis dataKey="name" tick={{ fill: "#64748b", fontSize: 10 }} />
-                <YAxis tick={{ fill: "#64748b", fontSize: 10 }} />
-                <Tooltip contentStyle={{ background: "#0f172a", border: "1px solid rgba(0,212,255,0.2)", borderRadius: 8, color: "#e2e8f0" }} />
-                <Bar dataKey="value" fill={data.barChart.color || "#00d4ff"} radius={[4, 4, 0, 0]} />
+                <XAxis 
+                  dataKey="name" 
+                  tick={{ fill: "#64748b", fontSize: 11 }}
+                  angle={-45}
+                  textAnchor="end"
+                  height={80}
+                />
+                <YAxis tick={{ fill: "#64748b", fontSize: 11 }} />
+                <Tooltip 
+                  content={<CustomTooltip unit={data.barChart.unit || ''} />}
+                  cursor={{ fill: 'rgba(0,212,255,0.1)' }}
+                />
+                <Bar 
+                  dataKey="value" 
+                  fill={data.barChart.color || "#00d4ff"} 
+                  radius={[8, 8, 0, 0]}
+                  animationDuration={800}
+                  animationEasing="ease-out"
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -108,13 +145,30 @@ function DashboardView({ data }) {
         {data.lineChart && (
           <div className="chart-box">
             <div className="chart-title">{data.lineChart.title}</div>
-            <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={data.lineChart.data} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+            <ResponsiveContainer width="100%" height={280}>
+              <LineChart data={data.lineChart.data} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                <XAxis dataKey="year" tick={{ fill: "#64748b", fontSize: 10 }} />
-                <YAxis tick={{ fill: "#64748b", fontSize: 10 }} />
-                <Tooltip contentStyle={{ background: "#0f172a", border: "1px solid rgba(0,212,255,0.2)", borderRadius: 8, color: "#e2e8f0" }} />
-                <Line type="monotone" dataKey="value" stroke={data.lineChart.color || "#06ffa5"} strokeWidth={2} dot={false} />
+                <XAxis 
+                  dataKey="year" 
+                  tick={{ fill: "#64748b", fontSize: 11 }}
+                  angle={-45}
+                  textAnchor="end"
+                  height={80}
+                />
+                <YAxis tick={{ fill: "#64748b", fontSize: 11 }} />
+                <Tooltip 
+                  content={<CustomTooltip unit={data.lineChart.unit || ''} />}
+                  cursor={{ stroke: 'rgba(0,212,255,0.2)' }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="value" 
+                  stroke={data.lineChart.color || "#06ffa5"} 
+                  strokeWidth={2} 
+                  dot={{ fill: data.lineChart.color || "#06ffa5", r: 4 }}
+                  animationDuration={800}
+                  animationEasing="ease-out"
+                />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -123,11 +177,11 @@ function DashboardView({ data }) {
       {radarData.length > 0 && (
         <div className="chart-box" style={{ marginBottom: 16 }}>
           <div className="chart-title">{data.radarChart.title}</div>
-          <ResponsiveContainer width="100%" height={200}>
+          <ResponsiveContainer width="100%" height={280}>
             <RadarChart data={radarData}>
               <PolarGrid stroke="rgba(255,255,255,0.08)" />
-              <PolarAngleAxis dataKey="subject" tick={{ fill: "#94a3b8", fontSize: 10 }} />
-              <Radar dataKey="value" stroke="#a855f7" fill="#a855f7" fillOpacity={0.2} strokeWidth={2} />
+              <PolarAngleAxis dataKey="subject" tick={{ fill: "#94a3b8", fontSize: 11 }} />
+              <Radar dataKey="value" stroke="#a855f7" fill="#a855f7" fillOpacity={0.25} strokeWidth={2} />
               <Tooltip contentStyle={{ background: "#0f172a", border: "1px solid rgba(168,85,247,0.3)", borderRadius: 8, color: "#e2e8f0" }} />
             </RadarChart>
           </ResponsiveContainer>
