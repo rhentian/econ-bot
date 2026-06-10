@@ -23,6 +23,15 @@ export const COMMODITIES = {
       "EU specialty segment grew 11.8% CAGR 2018–2023",
       "Fine-aroma cacao commands 3–3.5x premium over commodity",
       "Direct relationships eliminate 15–20% middleman margins"
+    ],
+    priceHistory: [
+      { year: "2020", price: 2450, change: "-" },
+      { year: "2021", price: 2680, change: "+9.4%" },
+      { year: "2022", price: 2890, change: "+7.8%" },
+      { year: "2023", price: 3100, change: "+7.3%" },
+      { year: "2024", price: 8400, change: "+170.9%" },
+      { year: "2025", price: 9001, change: "+2.1%" },
+      { year: "2026", price: 9180, change: "+2.0%" }
     ]
   },
 
@@ -46,6 +55,15 @@ export const COMMODITIES = {
       "Vietnam dominates commodity market (cost leadership)",
       "Ecuador premium positioning: 20–35% premium",
       "Tariff exposure: 25% increase = +$52,500/month risk"
+    ],
+    priceHistory: [
+      { year: "2020", price: 3.20, change: "-" },
+      { year: "2021", price: 3.45, change: "+7.8%" },
+      { year: "2022", price: 3.78, change: "+9.6%" },
+      { year: "2023", price: 4.05, change: "+7.1%" },
+      { year: "2024", price: 4.15, change: "+2.5%" },
+      { year: "2025", price: 4.20, change: "+1.2%" },
+      { year: "2026", price: 4.28, change: "+1.9%" }
     ]
   },
 
@@ -70,6 +88,15 @@ export const COMMODITIES = {
       "EU absorbs 40% of Ecuador's banana exports",
       "Rainforest Alliance opens EU premium channels (20–40% premium)",
       "Middle East alternative (no cert barrier)"
+    ],
+    priceHistory: [
+      { year: "2020", price: 950, change: "-" },
+      { year: "2021", price: 1010, change: "+6.3%" },
+      { year: "2022", price: 1050, change: "+3.9%" },
+      { year: "2023", price: 1070, change: "+1.9%" },
+      { year: "2024", price: 1085, change: "+1.4%" },
+      { year: "2025", price: 1100, change: "+1.4%" },
+      { year: "2026", price: 1120, change: "+1.8%" }
     ]
   },
 
@@ -93,6 +120,15 @@ export const COMMODITIES = {
       "Shelf life (21–25 days) = EU sea transit time (perfect match)",
       "Peak season +50% higher prices",
       "Organic premium: 40–60% price increase"
+    ],
+    priceHistory: [
+      { year: "2020", price: 4.20, change: "-" },
+      { year: "2021", price: 4.85, change: "+15.5%" },
+      { year: "2022", price: 5.40, change: "+11.3%" },
+      { year: "2023", price: 5.90, change: "+9.3%" },
+      { year: "2024", price: 6.25, change: "+5.9%" },
+      { year: "2025", price: 6.50, change: "+4.0%" },
+      { year: "2026", price: 6.80, change: "+4.6%" }
     ]
   },
 
@@ -117,6 +153,15 @@ export const COMMODITIES = {
       "Valentine's Day pre-booking: 60 days advance",
       "AI forecasting outperforms intuition by 25–35%",
       "Red Sea crisis: freight +250%, viability challenges"
+    ],
+    priceHistory: [
+      { year: "2020", price: 0.18, change: "-" },
+      { year: "2021", price: 0.19, change: "+5.6%" },
+      { year: "2022", price: 0.20, change: "+5.3%" },
+      { year: "2023", price: 0.21, change: "+5.0%" },
+      { year: "2024", price: 0.215, change: "+2.4%" },
+      { year: "2025", price: 0.22, change: "+2.3%" },
+      { year: "2026", price: 0.225, change: "+2.3%" }
     ]
   },
 
@@ -140,6 +185,15 @@ export const COMMODITIES = {
       "Germany: Europe's largest specialty market",
       "Direct roaster eliminates 15–20% broker margins",
       "2025: Arabica +51% (Brazil frost crisis)"
+    ],
+    priceHistory: [
+      { year: "2020", price: 3800, change: "-" },
+      { year: "2021", price: 4200, change: "+10.5%" },
+      { year: "2022", price: 5100, change: "+21.4%" },
+      { year: "2023", price: 5600, change: "+9.8%" },
+      { year: "2024", price: 8000, change: "+42.9%" },
+      { year: "2025", price: 8470, change: "+5.9%" },
+      { year: "2026", price: 8750, change: "+3.3%" }
     ]
   },
 
@@ -170,6 +224,15 @@ export const COMMODITIES = {
       "IRA mandates FTA partner content — Chile qualifies",
       "Battery-grade hydroxide = 2–4x raw price",
       "Local processing = FDI opportunity"
+    ],
+    priceHistory: [
+      { year: "2020", price: 8500, change: "-" },
+      { year: "2021", price: 12300, change: "+44.7%" },
+      { year: "2022", price: 18000, change: "+46.3%" },
+      { year: "2023", price: 16200, change: "-10.0%" },
+      { year: "2024", price: 19500, change: "+20.4%" },
+      { year: "2025", price: 21300, change: "+9.2%" },
+      { year: "2026", price: 22800, change: "+7.0%" }
     ]
   },
 
@@ -198,6 +261,15 @@ export const COMMODITIES = {
       "Vertical integration = 4.4x value multiplier",
       "Ecuador advantage: fine-aroma + labor cost",
       "EU duty 8% still profitable with labor savings"
+    ],
+    priceHistory: [
+      { year: "2020", price: 12500, change: "-" },
+      { year: "2021", price: 13200, change: "+5.6%" },
+      { year: "2022", price: 14100, change: "+6.8%" },
+      { year: "2023", price: 15000, change: "+6.4%" },
+      { year: "2024", price: 16800, change: "+12.0%" },
+      { year: "2025", price: 17500, change: "+4.2%" },
+      { year: "2026", price: 18200, change: "+4.0%" }
     ]
   },
 
@@ -227,6 +299,15 @@ export const COMMODITIES = {
       "EU pays 30–60% premium for certified origin",
       "Peru & Ecuador lack GI protection",
       "EU health food market +12%/yr"
+    ],
+    priceHistory: [
+      { year: "2020", price: 1400, change: "-" },
+      { year: "2021", price: 1600, change: "+14.3%" },
+      { year: "2022", price: 1750, change: "+9.4%" },
+      { year: "2023", price: 1850, change: "+5.7%" },
+      { year: "2024", price: 1950, change: "+5.4%" },
+      { year: "2025", price: 2000, change: "+2.6%" },
+      { year: "2026", price: 2080, change: "+4.0%" }
     ]
   }
 };

@@ -29,10 +29,10 @@ ALWAYS respond in English with precision and academic rigor.
 Keep responses concise — 2-3 sentences maximum for regular questions. CRITICAL: For ANY dashboard request, respond with ONLY the JSON object — no text before, after, or explanations.
 
 DASHBOARD CAPABILITY — CRITICAL:
-When user asks for dashboard, chart, graph, visualization, market analysis, price data, trends, or analytics of ANY commodity, respond ONLY with this exact JSON (nothing before or after):
+When user asks for dashboard, chart, graph, visualization, market analysis, price data, trends, table, historical prices, or analytics of ANY commodity, respond ONLY with this exact JSON (nothing before or after):
 Simplify dashboards: use only 1-2 charts max. Add clear labels to all axes. Include 3 bullet-point insights only.
 
-{"type":"dashboard","title":"Title","subtitle":"Description","cards":[{"label":"Metric","value":"XX","unit":"unit","color":"blue|cyan|purple|pink|green"}],"barChart":{"title":"Chart Title","data":[{"name":"Label","value":number}],"unit":"UNIT","color":"#00d4ff"},"lineChart":{"title":"Trend","data":[{"year":"YYYY","value":number}],"unit":"UNIT","color":"#06ffa5"},"radarChart":{"title":"Risk/Factors","labels":["F1","F2","F3","F4","F5"],"values":[n,n,n,n,n]},"insights":["insight 1","insight 2","insight 3"],"source":"TradeIQ BOT Dataset"}`;
+{"type":"dashboard","title":"Title","subtitle":"Description","cards":[{"label":"Metric","value":"XX","unit":"unit","color":"blue|cyan|purple|pink|green"}],"barChart":{"title":"Chart Title","data":[{"name":"Label","value":number}],"unit":"UNIT","color":"#00d4ff"},"lineChart":{"title":"Trend","data":[{"year":"YYYY","value":number}],"unit":"UNIT","color":"#06ffa5"},"radarChart":{"title":"Risk/Factors","labels":["F1","F2","F3","F4","F5"],"values":[n,n,n,n,n]},"table":{"title":"Table Title","columns":["Year","Price","Change"],"rows":[["2023","$5.20","+2.1%"]]},"insights":["insight 1","insight 2","insight 3"],"source":"TradeIQ BOT Dataset"}`;
 
 // Build commodity-specific context
 function buildCommodityContext(commodity) {
@@ -85,6 +85,33 @@ function CustomTooltip({ active, payload, label, unit }) {
     );
   }
   return null;
+}
+
+// Table component
+function TableView({ data }) {
+  return (
+    <div className="table-container">
+      <div className="table-title">{data.title}</div>
+      <table className="data-table">
+        <thead>
+          <tr>
+            {data.columns.map((col, i) => (
+              <th key={i}>{col}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {data.rows.map((row, i) => (
+            <tr key={i}>
+              {row.map((cell, j) => (
+                <td key={j}>{cell}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
 }
 
 // Dashboard viewer
@@ -186,6 +213,9 @@ function DashboardView({ data }) {
             </RadarChart>
           </ResponsiveContainer>
         </div>
+      )}
+      {data.table && (
+        <TableView data={data.table} />
       )}
       {data.insights?.length > 0 && (
         <div className="insights-box">
